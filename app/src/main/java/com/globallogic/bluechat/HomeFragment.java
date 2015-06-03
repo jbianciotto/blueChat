@@ -2,6 +2,7 @@ package com.globallogic.bluechat;
 
 import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
@@ -12,9 +13,12 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+
+import com.globallogic.bluechat.adapter.DeviceAdapter;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -29,7 +33,8 @@ public class HomeFragment extends Fragment {
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private View mView;
-    private ArrayAdapter<String> mDeviceList;
+    private ArrayList<BluetoothDevice> mDeviceList = new ArrayList<>();
+    private DeviceAdapter mDeviceAdapter;
 
     // Stops scanning after 10 seconds.
     private static final long SCAN_PERIOD = 10000;
@@ -72,7 +77,8 @@ public class HomeFragment extends Fragment {
                     // Get the BluetoothDevice object from the Intent
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     // Add the name and address to an array adapter to show in a ListView
-                    mDeviceList.add(device.getName() + "\n" + device.getAddress());
+                    mDeviceList.add(device);
+                    mDeviceAdapter.notifyDataSetChanged();
                 }
             }
         };
@@ -90,7 +96,8 @@ public class HomeFragment extends Fragment {
             // Loop through paired devices
             for (BluetoothDevice device : pairedDevices) {
                 // Add the name and address to an array adapter to show in a ListView
-                mDeviceList.add(device.getName() + "\n" + device.getAddress());
+                mDeviceList.add(device);
+                mDeviceAdapter.notifyDataSetChanged();
             }
         }
     }
@@ -108,15 +115,16 @@ public class HomeFragment extends Fragment {
                              Bundle savedInstanceState) {
         View mView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        mDeviceList = new ArrayAdapter<String>(
-                getActivity(),
-                R.layout.item_device_list,
-                R.id.device_name,
-                new ArrayList<String>()
-        );
-
-        ListView deviceList = (ListView) mView.findViewById(R.id.home_devices_list);
-        deviceList.setAdapter(mDeviceList);
+        mDeviceAdapter = new DeviceAdapter( getActivity(), mDeviceList);
+//
+        ListView deviceListView = (ListView) mView.findViewById(R.id.home_devices_list);
+        deviceListView.setAdapter(mDeviceAdapter);
+        deviceListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                ((HomeActivity) getActivity()).onDeviceSelected((BluetoothDevice) mDeviceAdapter.getItem(i));
+            }
+        });
 
         Button searchButton = (Button) mView.findViewById(R.id.search_button);
         searchButton.setOnClickListener(new View.OnClickListener() {
@@ -140,4 +148,10 @@ public class HomeFragment extends Fragment {
 
         return mView;
     }
+
+    public interface Callbacks {
+        public void onDeviceSelected(BluetoothDevice device);
+    }
+
 }
+

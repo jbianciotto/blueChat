@@ -1,12 +1,14 @@
 package com.globallogic.bluechat;
 
+import android.bluetooth.BluetoothDevice;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 
-public class HomeActivity extends ActionBarActivity {
+public class HomeActivity extends ActionBarActivity implements HomeFragment.Callbacks {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,5 +37,10 @@ public class HomeActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onDeviceSelected(BluetoothDevice device) {
+        Toast.makeText(this, "Selected "+device.getName(), Toast.LENGTH_LONG).show();
     }
 }
