@@ -21,6 +21,16 @@
         android:text="@string/search_label"/>
 
     <Button
+        android:id="@+id/cancel_button"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:enabled="false"
+        android:layout_gravity="bottom"
+        android:text="Detener"
+        />
+
+    <Button
         android:id="@+id/bonded_button"
         android:layout_width="match_parent"
         android:layout_height="0dp"

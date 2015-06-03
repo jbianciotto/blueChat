@@ -1,8 +1,9 @@
 package com.globallogic.bluechat;
 
+import android.app.Fragment;
 import android.bluetooth.BluetoothDevice;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -14,8 +15,15 @@ public class HomeActivity extends ActionBarActivity implements HomeFragment.Call
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (savedInstanceState == null) {
+            this.switchFragment(new HomeFragment());
+        }
     }
 
+    public void switchFragment(Fragment f) {
+        getFragmentManager().beginTransaction().replace(R.id.fragmentContainer, f);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

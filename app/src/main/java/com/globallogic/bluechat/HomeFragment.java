@@ -2,7 +2,6 @@ package com.globallogic.bluechat;
 
 import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
@@ -14,7 +13,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
@@ -59,9 +57,6 @@ public class HomeFragment extends Fragment {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent,REQUEST_ENABLE_BT);
         }
-
-
-
     }
 
     @Override
@@ -143,6 +138,15 @@ public class HomeFragment extends Fragment {
                 onBondedSearch();
 
 
+            }
+        });
+
+        final Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                cancelButton.setEnabled(false);
+                mBluetoothAdapter.cancelDiscovery();
             }
         });
 
