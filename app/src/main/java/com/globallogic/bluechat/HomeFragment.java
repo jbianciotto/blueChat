@@ -1,5 +1,6 @@
 package com.globallogic.bluechat;
 
+import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -8,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +17,7 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 
 /**
@@ -24,6 +25,7 @@ import java.util.ArrayList;
  */
 public class HomeFragment extends Fragment {
 
+    private BroadcastReceiver mReceiver;
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private View mView;
@@ -62,7 +64,7 @@ public class HomeFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         // Create a BroadcastReceiver for ACTION_FOUND
-        final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        mReceiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
                 // When discovery finds a device
@@ -80,9 +82,24 @@ public class HomeFragment extends Fragment {
         getActivity().registerReceiver(mReceiver, filter); // Don't forget to unregister during onDestroy
     }
 
+    public void onBondedSearch() {
+        mBluetoothAdapter.cancelDiscovery();
+        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+        // If there are paired devices
+        if (pairedDevices.size() > 0) {
+            // Loop through paired devices
+            for (BluetoothDevice device : pairedDevices) {
+                // Add the name and address to an array adapter to show in a ListView
+                mDeviceList.add(device.getName() + "\n" + device.getAddress());
+            }
+        }
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
+        getActivity().unregisterReceiver(mReceiver);
+
 
     }
 
@@ -107,6 +124,17 @@ public class HomeFragment extends Fragment {
             public void onClick(View v) {
                 mDeviceList.clear();
                 mBluetoothAdapter.startDiscovery();
+            }
+        });
+
+        Button bondButton = (Button) mView.findViewById(R.id.bonded_button);
+        bondButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDeviceList.clear();
+                onBondedSearch();
+
+
             }
         });
 

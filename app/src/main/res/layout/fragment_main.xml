@@ -10,7 +10,7 @@
         android:id="@+id/home_devices_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="9"/>
+        android:layout_weight="3"/>
 
     <Button
         android:id="@+id/search_button"
@@ -19,5 +19,13 @@
         android:layout_weight="1"
         android:layout_gravity="bottom"
         android:text="@string/search_label"/>
+
+    <Button
+        android:id="@+id/bonded_button"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_gravity="bottom"
+        android:text="@string/bond_label"/>
 
 </LinearLayout>
