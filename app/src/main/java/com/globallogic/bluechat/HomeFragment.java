@@ -72,8 +72,7 @@ public class HomeFragment extends Fragment {
                     // Get the BluetoothDevice object from the Intent
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     // Add the name and address to an array adapter to show in a ListView
-                    mDeviceList.add(device);
-                    mDeviceAdapter.notifyDataSetChanged();
+                    mDeviceAdapter.add(device);
                 }
             }
         };
@@ -91,8 +90,7 @@ public class HomeFragment extends Fragment {
             // Loop through paired devices
             for (BluetoothDevice device : pairedDevices) {
                 // Add the name and address to an array adapter to show in a ListView
-                mDeviceList.add(device);
-                mDeviceAdapter.notifyDataSetChanged();
+                mDeviceAdapter.add(device);
             }
         }
     }
@@ -101,14 +99,25 @@ public class HomeFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         getActivity().unregisterReceiver(mReceiver);
+    }
 
+    private void startDiscovery() {
+        mDeviceAdapter.clear();
+        Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
+        cancelButton.setEnabled(true);
+        mBluetoothAdapter.startDiscovery();
+    }
 
+    public void cancelDiscovery() {
+        Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
+        cancelButton.setEnabled(false);
+        mBluetoothAdapter.cancelDiscovery();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View mView = inflater.inflate(R.layout.fragment_main, container, false);
+        mView = inflater.inflate(R.layout.fragment_main, container, false);
 
         mDeviceAdapter = new DeviceAdapter( getActivity(), mDeviceList);
 //
@@ -125,8 +134,7 @@ public class HomeFragment extends Fragment {
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mDeviceList.clear();
-                mBluetoothAdapter.startDiscovery();
+                startDiscovery();
             }
         });
 
@@ -136,17 +144,14 @@ public class HomeFragment extends Fragment {
             public void onClick(View v) {
                 mDeviceList.clear();
                 onBondedSearch();
-
-
             }
         });
 
-        final Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
+        Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cancelButton.setEnabled(false);
-                mBluetoothAdapter.cancelDiscovery();
+                cancelDiscovery();
             }
         });
 
