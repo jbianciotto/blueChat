@@ -9,8 +9,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.globallogic.bluechat.manager.ConnectionMgr;
-
 
 public class HomeActivity extends ActionBarActivity implements HomeFragment.Callbacks {
 
@@ -74,7 +72,7 @@ public class HomeActivity extends ActionBarActivity implements HomeFragment.Call
         arguments.putString("BTTargetAddress", socket.getRemoteDevice().getAddress());
         connFragment.setArguments(arguments);
 
-        this.switchFragment(connFragment);
+        this.switchFragment(connFragment, "ConnectionFragment");
     }
 
 }

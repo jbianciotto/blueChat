@@ -3,7 +3,6 @@ package com.globallogic.bluechat;
 import android.app.Fragment;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -47,15 +46,18 @@ public class ConnectionFragment extends Fragment {
                 bSocket = mDevice.createRfcommSocketToServiceRecord(UUID.fromString("96d85412-43a3-422e-92cb-1346f76ee620"));
                 bSocket.connect();
             } catch (IOException e) {
-                Log.d("ConnectionFragment", "IO EXCEPTION!!!!!");
+                Log.d("ConnectionFragment", "IO EXCEPTION: " + e.getMessage() + "!!!!!");
             }
         } else {
+            Log.d("ConnectionFragment", "Fetching socket from cat bag");
             String key = args.getString("BTTargetAddress");
             bSocket = ConnectionMgr.getConnection(key);
         }
 
-        if (bSocket.isConnected()) new socketRead().execute(bSocket);
-
+        if (bSocket.isConnected()) {
+            new socketRead(bSocket).run();
+            Log.d("ConnectionFragment", "AsyncTask Launched");
+        }
     }
 
     private void sendText(byte[] payload) {
@@ -64,6 +66,8 @@ public class ConnectionFragment extends Fragment {
             if(bSocket != null && bSocket.isConnected()) {
                 bSocket.getOutputStream().write(payload);
                 chatAdapter.add("Me: " + new String(payload));
+            }else {
+                Log.d("ConnectionFragment", "Socket está cerrado!!!!");
             }
         } catch (IOException e) {
             Log.d("ConnectionFragment", "Transfer EXCEPTION!!!");
@@ -100,39 +104,49 @@ public class ConnectionFragment extends Fragment {
         return mView;
     }
 
-    private class socketRead extends AsyncTask<BluetoothSocket, String, Integer> {
+    private class socketRead extends Thread {
+        BluetoothSocket mSocket;
 
-        @Override
-        protected Integer doInBackground(BluetoothSocket... bluetoothSockets) {
-            BluetoothSocket socket = bluetoothSockets[0];
+        public socketRead(BluetoothSocket socket) {
+            mSocket = socket;
+        }
+
+        public void run() {
             byte[] buffer = new byte[1024];
             int bytes;
             String inputMessage;
 
+            Log.d("ConnectionFragment", "AsyncTask started");
+
             while(true) {
                 try {
-                    bytes = socket.getInputStream().read(buffer);
-                    inputMessage = new String(buffer).substring(0,bytes);
+                    bytes = mSocket.getInputStream().read(buffer);
+                    inputMessage = new String(buffer).substring(0, bytes);
                     Log.d("ConnectionFragment", "I read " + bytes + " bytes: " + inputMessage);
-                    publishProgress(socket.getRemoteDevice().getName(), inputMessage);
+                    mView.post(new updateUI(inputMessage));
                 } catch (IOException readException) {
+                    Log.d("ConnectionFragment", "Exception: " + readException.getMessage());
                     try {
-                        socket.close();
+                        mSocket.close();
                     } catch (IOException closeException) {
                         Log.d("ConnectionFragment", "Input socket couldn't have been closed");
                     }
-                    break;
                 }
             }
-            return 0;
         }
 
-        @Override
-        protected void onProgressUpdate(String... values) {
-            String remoteName = values[0];
-            String message = values[1];
+        private class updateUI implements Runnable {
+            String message;
 
-            chatAdapter.add(remoteName + ": " + message);
+            public updateUI(String message) {
+                this.message = message;
+            }
+
+            @Override
+            public void run() {
+                chatAdapter.add(mSocket.getRemoteDevice().getName() + ": " + message);
+
+            }
         }
     }
 
