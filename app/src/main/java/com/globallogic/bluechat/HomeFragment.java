@@ -4,6 +4,7 @@ import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -17,6 +18,7 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import com.globallogic.bluechat.adapter.DeviceAdapter;
+import com.globallogic.bluechat.task.listenConnectionsTask;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -81,6 +83,8 @@ public class HomeFragment extends Fragment {
         // Register the BroadcastReceiver
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         getActivity().registerReceiver(mReceiver, filter); // Don't forget to unregister during onDestroy
+
+        new listenConnectionsTask().execute((HomeActivity) getActivity());
     }
 
     public void onBondedSearch() {
