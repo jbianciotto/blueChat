@@ -142,7 +142,7 @@ public class HomeFragment extends Fragment {
         bondButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mDeviceList.clear();
+                mDeviceAdapter.clear();
                 onBondedSearch();
             }
         });
