@@ -66,6 +66,7 @@ public class ConnectionFragment extends Fragment {
             if(bSocket != null && bSocket.isConnected()) {
                 bSocket.getOutputStream().write(payload);
                 chatAdapter.add("Me: " + new String(payload));
+                chatWindow.smoothScrollToPosition(chatAdapter.getCount() - 1);
             }else {
                 Log.d("ConnectionFragment", "Socket está cerrado!!!!");
             }
@@ -146,7 +147,7 @@ public class ConnectionFragment extends Fragment {
             @Override
             public void run() {
                 chatAdapter.add(mSocket.getRemoteDevice().getName() + ": " + message);
-
+                chatWindow.smoothScrollToPosition(chatAdapter.getCount() - 1);
             }
         }
     }
