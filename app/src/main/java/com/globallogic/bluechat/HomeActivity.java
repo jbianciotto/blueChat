@@ -20,6 +20,10 @@ public class HomeActivity extends ActionBarActivity implements HomeFragment.Call
         }
     }
 
+    public void switchFragment(Fragment f, String backStackString) {
+        getFragmentManager().beginTransaction().replace(R.id.fragmentContainer, f).addToBackStack(backStackString).commit();
+    }
+
     public void switchFragment(Fragment f) {
         getFragmentManager().beginTransaction().replace(R.id.fragmentContainer, f).commit();
     }
@@ -54,6 +58,6 @@ public class HomeActivity extends ActionBarActivity implements HomeFragment.Call
         arguments.putParcelable("BTDevice", device);
         connFragment.setArguments(arguments);
 
-        this.switchFragment(connFragment);
+        this.switchFragment(connFragment, "ConnectionFragment");
     }
 }

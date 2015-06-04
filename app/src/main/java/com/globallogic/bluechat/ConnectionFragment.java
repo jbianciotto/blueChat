@@ -3,6 +3,7 @@ package com.globallogic.bluechat;
 import android.app.Fragment;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,7 +25,7 @@ public class ConnectionFragment extends Fragment {
 
     private ListView chatWindow;
     private ArrayAdapter<String> chatAdapter;
-    private ArrayList<String> chatList;
+    private ArrayList<String> chatList = new ArrayList<String>();
     private EditText messageWindow;
     private Button sendButton;
 
@@ -39,13 +40,16 @@ public class ConnectionFragment extends Fragment {
         Bundle args = getArguments();
         mDevice = args.getParcelable("BTDevice");
 
-        chatList = new ArrayList<String>();
-
-        try {
-            bSocket = mDevice.createRfcommSocketToServiceRecord(UUID.fromString("96d85412-43a3-422e-92cb-1346f76ee620"));
-            bSocket.connect();
-        } catch (IOException e) {
-            Log.d("ConnectionFragment", "IO EXCEPTION!!!!!");
+        if(mDevice != null) {
+            try {
+                bSocket = mDevice.createRfcommSocketToServiceRecord(UUID.fromString("96d85412-43a3-422e-92cb-1346f76ee620"));
+                bSocket.connect();
+                if (bSocket.isConnected()) new socketRead().execute(bSocket);
+            } catch (IOException e) {
+                Log.d("ConnectionFragment", "IO EXCEPTION!!!!!");
+            }
+        } else {
+            //
         }
     }
 
@@ -54,7 +58,7 @@ public class ConnectionFragment extends Fragment {
 
             if(bSocket != null && bSocket.isConnected()) {
                 bSocket.getOutputStream().write(payload);
-                chatAdapter.add("Me: " + payload.toString());
+                chatAdapter.add("Me: " + new String(payload));
             }
         } catch (IOException e) {
             Log.d("ConnectionFragment", "Transfer EXCEPTION!!!");
@@ -90,4 +94,40 @@ public class ConnectionFragment extends Fragment {
 
         return mView;
     }
+
+    private class socketRead extends AsyncTask<BluetoothSocket, String, Integer> {
+
+        @Override
+        protected Integer doInBackground(BluetoothSocket... bluetoothSockets) {
+            BluetoothSocket socket = bluetoothSockets[0];
+            byte[] buffer = new byte[1024];
+            int bytes;
+            String inputMessage;
+
+            while(true) {
+                try {
+                    bytes = socket.getInputStream().read(buffer);
+                    inputMessage = new String(buffer).substring(0,bytes);
+                    publishProgress(socket.getRemoteDevice().getName(), inputMessage);
+                } catch (IOException readException) {
+                    try {
+                        socket.close();
+                    } catch (IOException closeException) {
+                        Log.d("ConnectionFragment", "Input socket couldn't have been closed");
+                    }
+                    break;
+                }
+            }
+            return 0;
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values) {
+            String remoteName = values[0];
+            String message = values[1];
+
+            chatAdapter.add(remoteName + ": " + message);
+        }
+    }
+
 }
