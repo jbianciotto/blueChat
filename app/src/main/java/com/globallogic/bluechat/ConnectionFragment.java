@@ -55,7 +55,7 @@ public class ConnectionFragment extends Fragment {
         }
 
         if (bSocket.isConnected()) {
-            new socketRead(bSocket).run();
+            new Thread(new socketRead(bSocket)).start();
             Log.d("ConnectionFragment", "AsyncTask Launched");
         }
     }
@@ -104,13 +104,14 @@ public class ConnectionFragment extends Fragment {
         return mView;
     }
 
-    private class socketRead extends Thread {
+    private class socketRead implements Runnable {
         BluetoothSocket mSocket;
 
         public socketRead(BluetoothSocket socket) {
             mSocket = socket;
         }
 
+        @Override
         public void run() {
             byte[] buffer = new byte[1024];
             int bytes;
