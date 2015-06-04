@@ -25,6 +25,7 @@ import java.util.Set;
 /**
  * A placeholder fragment containing a simple view.
  */
+
 public class HomeFragment extends Fragment {
 
     private BroadcastReceiver mReceiver;
@@ -126,6 +127,7 @@ public class HomeFragment extends Fragment {
         deviceListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                cancelDiscovery();
                 ((HomeActivity) getActivity()).onDeviceSelected((BluetoothDevice) mDeviceAdapter.getItem(i));
             }
         });

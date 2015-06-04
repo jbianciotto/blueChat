@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 
 public class HomeActivity extends ActionBarActivity implements HomeFragment.Callbacks {
@@ -52,7 +51,7 @@ public class HomeActivity extends ActionBarActivity implements HomeFragment.Call
         ConnectionFragment connFragment = new ConnectionFragment();
 
         Bundle arguments = new Bundle();
-        arguments.putString("SELECTED_DEVICE_ADDRESS", device.getAddress());
+        arguments.putParcelable("BTDevice", device);
         connFragment.setArguments(arguments);
 
         this.switchFragment(connFragment);
