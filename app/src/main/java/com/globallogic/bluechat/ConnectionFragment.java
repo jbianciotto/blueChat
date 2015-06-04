@@ -113,6 +113,7 @@ public class ConnectionFragment extends Fragment {
                 try {
                     bytes = socket.getInputStream().read(buffer);
                     inputMessage = new String(buffer).substring(0,bytes);
+                    Log.d("ConnectionFragment", "I read " + bytes + " bytes: " + inputMessage);
                     publishProgress(socket.getRemoteDevice().getName(), inputMessage);
                 } catch (IOException readException) {
                     try {
