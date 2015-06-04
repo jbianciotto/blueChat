@@ -2,10 +2,14 @@ package com.globallogic.bluechat;
 
 import android.app.Fragment;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import com.globallogic.bluechat.manager.ConnectionMgr;
 
 
 public class HomeActivity extends ActionBarActivity implements HomeFragment.Callbacks {
@@ -60,4 +64,17 @@ public class HomeActivity extends ActionBarActivity implements HomeFragment.Call
 
         this.switchFragment(connFragment, "ConnectionFragment");
     }
+
+    public void onConnectionAccepted(BluetoothSocket socket) {
+        ConnectionFragment connFragment = new ConnectionFragment();
+
+        Log.d("BLUECHAT", "connection acepted from "+socket.getRemoteDevice().getAddress());
+
+        Bundle arguments = new Bundle();
+        arguments.putString("BTTargetAddress", socket.getRemoteDevice().getAddress());
+        connFragment.setArguments(arguments);
+
+        this.switchFragment(connFragment);
+    }
+
 }
