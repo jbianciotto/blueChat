@@ -14,6 +14,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.globallogic.bluechat.manager.ConnectionMgr;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -49,7 +51,8 @@ public class ConnectionFragment extends Fragment {
                 Log.d("ConnectionFragment", "IO EXCEPTION!!!!!");
             }
         } else {
-            //
+            String key = args.getString("BTTargetAddress");
+            bSocket = ConnectionMgr.getConnection(key);
         }
     }
 
