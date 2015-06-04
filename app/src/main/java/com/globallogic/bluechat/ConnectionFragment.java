@@ -46,7 +46,6 @@ public class ConnectionFragment extends Fragment {
             try {
                 bSocket = mDevice.createRfcommSocketToServiceRecord(UUID.fromString("96d85412-43a3-422e-92cb-1346f76ee620"));
                 bSocket.connect();
-                if (bSocket.isConnected()) new socketRead().execute(bSocket);
             } catch (IOException e) {
                 Log.d("ConnectionFragment", "IO EXCEPTION!!!!!");
             }
@@ -54,6 +53,9 @@ public class ConnectionFragment extends Fragment {
             String key = args.getString("BTTargetAddress");
             bSocket = ConnectionMgr.getConnection(key);
         }
+
+        if (bSocket.isConnected()) new socketRead().execute(bSocket);
+
     }
 
     private void sendText(byte[] payload) {
