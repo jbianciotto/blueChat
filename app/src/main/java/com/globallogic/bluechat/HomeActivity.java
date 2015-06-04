@@ -49,6 +49,12 @@ public class HomeActivity extends ActionBarActivity implements HomeFragment.Call
 
     @Override
     public void onDeviceSelected(BluetoothDevice device) {
-        Toast.makeText(this, "Selected "+device.getName(), Toast.LENGTH_LONG).show();
+        ConnectionFragment connFragment = new ConnectionFragment();
+
+        Bundle arguments = new Bundle();
+        arguments.putString("SELECTED_DEVICE_ADDRESS", device.getAddress());
+        connFragment.setArguments(arguments);
+
+        this.switchFragment(connFragment);
     }
 }
