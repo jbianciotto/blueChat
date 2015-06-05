@@ -1,4 +1,4 @@
-package com.globallogic.bluechat;
+package com.globallogic.bluechat.activity;
 
 import android.app.Fragment;
 import android.bluetooth.BluetoothDevice;
@@ -8,6 +8,10 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import com.globallogic.bluechat.R;
+import com.globallogic.bluechat.fragment.ConnectionFragment;
+import com.globallogic.bluechat.fragment.HomeFragment;
 
 
 public class HomeActivity extends ActionBarActivity implements HomeFragment.Callbacks {

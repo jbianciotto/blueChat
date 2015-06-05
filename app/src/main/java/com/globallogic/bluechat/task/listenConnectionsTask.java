@@ -6,7 +6,7 @@ import android.bluetooth.BluetoothSocket;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.globallogic.bluechat.HomeActivity;
+import com.globallogic.bluechat.activity.HomeActivity;
 import com.globallogic.bluechat.manager.ConnectionMgr;
 
 import java.io.IOException;

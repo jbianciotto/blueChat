@@ -32,11 +32,11 @@ public class BluetoothMgr implements BTManager {
 
     @Override
     public void startDiscovery() {
-
+        mBluetoothAdapter.startDiscovery();
     }
 
     @Override
     public void stopDiscovery() {
-
+        mBluetoothAdapter.cancelDiscovery();
     }
 }

@@ -1,10 +1,8 @@
-package com.globallogic.bluechat;
+package com.globallogic.bluechat.fragment;
 
 import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -17,7 +15,11 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 
+import com.globallogic.bluechat.activity.HomeActivity;
+import com.globallogic.bluechat.R;
 import com.globallogic.bluechat.adapter.DeviceAdapter;
+import com.globallogic.bluechat.interfaces.BTManager;
+import com.globallogic.bluechat.manager.BluetoothMgr;
 import com.globallogic.bluechat.task.listenConnectionsTask;
 
 import java.util.ArrayList;
@@ -31,8 +33,7 @@ import java.util.Set;
 public class HomeFragment extends Fragment {
 
     private BroadcastReceiver mReceiver;
-    private BluetoothManager mBluetoothManager;
-    private BluetoothAdapter mBluetoothAdapter;
+    BTManager mBluetoothMgr;
     private View mView;
     private ArrayList<BluetoothDevice> mDeviceList = new ArrayList<>();
     private DeviceAdapter mDeviceAdapter;
@@ -49,14 +50,8 @@ public class HomeFragment extends Fragment {
 
         final int REQUEST_ENABLE_BT = 20;
 
-        mBluetoothManager = (BluetoothManager) getActivity().
-                getSystemService(getActivity().BLUETOOTH_SERVICE);
-
-        mBluetoothAdapter = mBluetoothManager.getAdapter();
-
-
         // displays a dialog requesting user permission to enable Bluetooth.
-        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
+        if (mBluetoothMgr.isDisabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent,REQUEST_ENABLE_BT);
         }
@@ -80,6 +75,8 @@ public class HomeFragment extends Fragment {
             }
         };
 
+        mBluetoothMgr = new BluetoothMgr(getActivity());
+
         // Register the BroadcastReceiver
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         getActivity().registerReceiver(mReceiver, filter); // Don't forget to unregister during onDestroy
@@ -88,8 +85,8 @@ public class HomeFragment extends Fragment {
     }
 
     public void onBondedSearch() {
-        mBluetoothAdapter.cancelDiscovery();
-        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+        mBluetoothMgr.stopDiscovery();
+        Set<BluetoothDevice> pairedDevices = mBluetoothMgr.getBTAdapter().getBondedDevices();
         // If there are paired devices
         if (pairedDevices.size() > 0) {
             // Loop through paired devices
@@ -110,13 +107,13 @@ public class HomeFragment extends Fragment {
         mDeviceAdapter.clear();
         Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
         cancelButton.setEnabled(true);
-        mBluetoothAdapter.startDiscovery();
+        mBluetoothMgr.startDiscovery();
     }
 
     public void cancelDiscovery() {
         Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
         cancelButton.setEnabled(false);
-        mBluetoothAdapter.cancelDiscovery();
+        mBluetoothMgr.stopDiscovery();
     }
 
     @Override
