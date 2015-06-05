@@ -5,10 +5,7 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.os.AsyncTask;
 import android.util.Log;
-
 import com.globallogic.bluechat.activity.HomeActivity;
-import com.globallogic.bluechat.manager.ConnectionMgr;
-
 import java.io.IOException;
 import java.util.UUID;
 
@@ -29,7 +26,6 @@ public class listenConnectionsTask extends AsyncTask<HomeActivity,Void,Bluetooth
         try {
             serverSocket = BluetoothAdapter.getDefaultAdapter().listenUsingRfcommWithServiceRecord("blueChat", UUID.fromString("96d85412-43a3-422e-92cb-1346f76ee620"));
             socket = serverSocket.accept();
-            ConnectionMgr.registerConnection(socket);
             serverSocket.close();
             Log.d("BLUECHAT", "Connection accepted from" + socket.getRemoteDevice().getAddress());
         } catch (IOException e){

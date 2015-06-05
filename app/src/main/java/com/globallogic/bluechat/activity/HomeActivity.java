@@ -69,7 +69,7 @@ public class HomeActivity extends ActionBarActivity implements HomeFragment.Call
 
     public void onConnectionAccepted(BluetoothSocket socket) {
         ConnectionFragment connFragment = new ConnectionFragment();
-
+        connFragment.setbSocket(socket);
         Log.d("BLUECHAT", "connection acepted from "+socket.getRemoteDevice().getAddress());
 
         Bundle arguments = new Bundle();

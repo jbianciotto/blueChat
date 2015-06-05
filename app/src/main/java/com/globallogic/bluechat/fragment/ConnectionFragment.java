@@ -12,10 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-
 import com.globallogic.bluechat.R;
-import com.globallogic.bluechat.manager.ConnectionMgr;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -24,7 +21,6 @@ public class ConnectionFragment extends Fragment {
     private View mView;
     private BluetoothDevice mDevice;
     private BluetoothSocket bSocket;
-
     private ListView chatWindow;
     private ArrayAdapter<String> chatAdapter;
     private ArrayList<String> chatList = new ArrayList<String>();
@@ -33,6 +29,10 @@ public class ConnectionFragment extends Fragment {
 
     public ConnectionFragment() {
         // Required empty public constructor
+    }
+
+    public void setbSocket(BluetoothSocket bSocket) {
+        this.bSocket = bSocket;
     }
 
     @Override
@@ -49,10 +49,6 @@ public class ConnectionFragment extends Fragment {
             } catch (IOException e) {
                 Log.d("ConnectionFragment", "IO EXCEPTION: " + e.getMessage() + "!!!!!");
             }
-        } else {
-            Log.d("ConnectionFragment", "Fetching socket from cat bag");
-            String key = args.getString("BTTargetAddress");
-            bSocket = ConnectionMgr.getConnection(key);
         }
 
         if (bSocket.isConnected()) {
