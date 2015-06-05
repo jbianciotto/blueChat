@@ -41,6 +41,6 @@ public class listenConnectionsTask extends AsyncTask<HomeActivity,Void,Bluetooth
 
     @Override
     protected void onPostExecute(BluetoothSocket bluetoothSocket) {
-        activity.onConnectionAccepted(bluetoothSocket);
+        activity.onConnectionEstablished(bluetoothSocket);
     }
 }

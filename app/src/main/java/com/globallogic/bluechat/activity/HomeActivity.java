@@ -13,6 +13,9 @@ import com.globallogic.bluechat.R;
 import com.globallogic.bluechat.fragment.ConnectionFragment;
 import com.globallogic.bluechat.fragment.HomeFragment;
 
+import java.io.IOException;
+import java.util.UUID;
+
 
 public class HomeActivity extends ActionBarActivity implements HomeFragment.Callbacks {
 
@@ -57,26 +60,12 @@ public class HomeActivity extends ActionBarActivity implements HomeFragment.Call
     }
 
     @Override
-    public void onDeviceSelected(BluetoothDevice device) {
-        ConnectionFragment connFragment = new ConnectionFragment();
-
-        Bundle arguments = new Bundle();
-        arguments.putParcelable("BTDevice", device);
-        connFragment.setArguments(arguments);
-
-        this.switchFragment(connFragment, "ConnectionFragment");
-    }
-
-    public void onConnectionAccepted(BluetoothSocket socket) {
+    public void onConnectionEstablished (BluetoothSocket socket) {
         ConnectionFragment connFragment = new ConnectionFragment();
         connFragment.setbSocket(socket);
-        Log.d("BLUECHAT", "connection acepted from "+socket.getRemoteDevice().getAddress());
-
-        Bundle arguments = new Bundle();
-        arguments.putString("BTTargetAddress", socket.getRemoteDevice().getAddress());
-        connFragment.setArguments(arguments);
-
+        Log.d("BLUECHAT", "connection established to" + socket.getRemoteDevice().getAddress());
         this.switchFragment(connFragment, "ConnectionFragment");
+
     }
 
 }

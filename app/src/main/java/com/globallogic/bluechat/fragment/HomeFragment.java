@@ -3,11 +3,13 @@ package com.globallogic.bluechat.fragment;
 import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,8 +24,10 @@ import com.globallogic.bluechat.interfaces.BTManager;
 import com.globallogic.bluechat.manager.BluetoothMgr;
 import com.globallogic.bluechat.task.listenConnectionsTask;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.UUID;
 
 
 /**
@@ -129,7 +133,19 @@ public class HomeFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 cancelDiscovery();
-                ((HomeActivity) getActivity()).onDeviceSelected((BluetoothDevice) mDeviceAdapter.getItem(i));
+                BluetoothDevice device = (BluetoothDevice) mDeviceAdapter.getItem(i);
+                BluetoothSocket socket = null;
+                try {
+                    socket = device.createRfcommSocketToServiceRecord(UUID.fromString("96d85412-43a3-422e-92cb-1346f76ee620"));
+                    socket.connect();
+                    Log.d("BLUECHAT", "connection established to" + socket.getRemoteDevice().getAddress());
+
+                } catch (IOException e) {
+                    Log.d("ConnectionFragment", "IO EXCEPTION: " + e.getMessage() + "!!!!!");
+                }
+
+
+                ((HomeActivity) getActivity()).onConnectionEstablished(socket);
             }
         });
 
@@ -162,7 +178,7 @@ public class HomeFragment extends Fragment {
     }
 
     public interface Callbacks {
-        public void onDeviceSelected(BluetoothDevice device);
+        public void onConnectionEstablished(BluetoothSocket socket);
     }
 
 }

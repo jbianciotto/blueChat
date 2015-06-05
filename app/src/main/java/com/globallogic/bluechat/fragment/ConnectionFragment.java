@@ -39,19 +39,7 @@ public class ConnectionFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Bundle args = getArguments();
-        mDevice = args.getParcelable("BTDevice");
-
-        if(mDevice != null) {
-            try {
-                bSocket = mDevice.createRfcommSocketToServiceRecord(UUID.fromString("96d85412-43a3-422e-92cb-1346f76ee620"));
-                bSocket.connect();
-            } catch (IOException e) {
-                Log.d("ConnectionFragment", "IO EXCEPTION: " + e.getMessage() + "!!!!!");
-            }
-        }
-
-        if (bSocket.isConnected()) {
+        if (bSocket != null && bSocket.isConnected()) {
             new Thread(new socketRead(bSocket)).start();
             Log.d("ConnectionFragment", "AsyncTask Launched");
         }
@@ -111,7 +99,7 @@ public class ConnectionFragment extends Fragment {
 
         @Override
         public void run() {
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[255];
             int bytes;
             String inputMessage;
 
