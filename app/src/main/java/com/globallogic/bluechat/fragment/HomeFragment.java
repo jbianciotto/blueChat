@@ -1,6 +1,6 @@
 package com.globallogic.bluechat.fragment;
 
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;

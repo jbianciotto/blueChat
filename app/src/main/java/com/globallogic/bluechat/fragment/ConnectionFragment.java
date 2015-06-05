@@ -1,6 +1,6 @@
 package com.globallogic.bluechat.fragment;
 
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
@@ -12,10 +12,11 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+
 import com.globallogic.bluechat.R;
+
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.UUID;
 
 public class ConnectionFragment extends Fragment {
     private View mView;

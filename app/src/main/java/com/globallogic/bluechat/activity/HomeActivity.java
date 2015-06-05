@@ -1,9 +1,8 @@
 package com.globallogic.bluechat.activity;
 
-import android.app.Fragment;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -12,9 +11,6 @@ import android.view.MenuItem;
 import com.globallogic.bluechat.R;
 import com.globallogic.bluechat.fragment.ConnectionFragment;
 import com.globallogic.bluechat.fragment.HomeFragment;
-
-import java.io.IOException;
-import java.util.UUID;
 
 
 public class HomeActivity extends ActionBarActivity implements HomeFragment.Callbacks {
@@ -30,11 +26,11 @@ public class HomeActivity extends ActionBarActivity implements HomeFragment.Call
     }
 
     public void switchFragment(Fragment f, String backStackString) {
-        getFragmentManager().beginTransaction().replace(R.id.fragmentContainer, f).addToBackStack(backStackString).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, f).addToBackStack(backStackString).commit();
     }
 
     public void switchFragment(Fragment f) {
-        getFragmentManager().beginTransaction().replace(R.id.fragmentContainer, f).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, f).commit();
     }
 
     @Override
