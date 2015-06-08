@@ -1,14 +1,17 @@
 package com.globallogic.bluechat.fragment;
 
-import android.support.v4.app.Fragment;
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,15 +20,17 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 
-import com.globallogic.bluechat.activity.HomeActivity;
 import com.globallogic.bluechat.R;
+import com.globallogic.bluechat.activity.HomeActivity;
 import com.globallogic.bluechat.adapter.DeviceAdapter;
 import com.globallogic.bluechat.interfaces.BTManager;
+import com.globallogic.bluechat.manager.BLEMgr;
 import com.globallogic.bluechat.manager.BluetoothMgr;
 import com.globallogic.bluechat.task.listenConnectionsTask;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,14 +41,13 @@ import java.util.UUID;
 
 public class HomeFragment extends Fragment {
 
-    private BroadcastReceiver mReceiver;
+    // Stops scanning after 10 seconds.
+    private static final long SCAN_PERIOD = 10000;
     BTManager mBluetoothMgr;
+    private BroadcastReceiver mReceiver;
     private View mView;
     private ArrayList<BluetoothDevice> mDeviceList = new ArrayList<>();
     private DeviceAdapter mDeviceAdapter;
-
-    // Stops scanning after 10 seconds.
-    private static final long SCAN_PERIOD = 10000;
 
     public HomeFragment() {
     }
@@ -57,13 +61,20 @@ public class HomeFragment extends Fragment {
         // displays a dialog requesting user permission to enable Bluetooth.
         if (mBluetoothMgr.isDisabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent,REQUEST_ENABLE_BT);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        startBT();
+    }
+
+    public void startBT() {
+        if(mBluetoothMgr != null) {
+            mBluetoothMgr.stopDiscovery();
+        }
 
         // Create a BroadcastReceiver for ACTION_FOUND
         mReceiver = new BroadcastReceiver() {
@@ -86,6 +97,33 @@ public class HomeFragment extends Fragment {
         getActivity().registerReceiver(mReceiver, filter); // Don't forget to unregister during onDestroy
 
         new listenConnectionsTask().execute((HomeActivity) getActivity());
+    }
+
+    @TargetApi(21)
+    public void startBLE() {
+        if(mBluetoothMgr != null) {
+            mBluetoothMgr.stopDiscovery();
+        }
+
+        ScanCallback callback = new ScanCallback() {
+            @Override
+            public void onScanResult(int callbackType, ScanResult result) {
+                super.onScanResult(callbackType, result);
+                getActivity().runOnUiThread(new deviceReceiver(result));
+            }
+
+            @Override
+            public void onBatchScanResults(List<ScanResult> results) {
+                super.onBatchScanResults(results);
+            }
+
+            @Override
+            public void onScanFailed(int errorCode) {
+                super.onScanFailed(errorCode);
+            }
+        };
+
+        mBluetoothMgr = new BLEMgr(getActivity(), callback);
     }
 
     public void onBondedSearch() {
@@ -125,7 +163,7 @@ public class HomeFragment extends Fragment {
                              Bundle savedInstanceState) {
         mView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        mDeviceAdapter = new DeviceAdapter( getActivity(), mDeviceList);
+        mDeviceAdapter = new DeviceAdapter(getActivity(), mDeviceList);
 //
         ListView deviceListView = (ListView) mView.findViewById(R.id.home_devices_list);
         deviceListView.setAdapter(mDeviceAdapter);
@@ -174,6 +212,23 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        Button bleButton = (Button) mView.findViewById(R.id.enable_ble_button);
+        bleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startBLE();
+            }
+        });
+
+        Button btButton = (Button) mView.findViewById(R.id.enable_bt_button);
+        btButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startBT();
+            }
+        });
+
+
         return mView;
     }
 
@@ -181,5 +236,18 @@ public class HomeFragment extends Fragment {
         public void onConnectionEstablished(BluetoothSocket socket);
     }
 
+    @TargetApi(21)
+    private class deviceReceiver implements Runnable {
+        private BluetoothDevice device;
+
+        public deviceReceiver(ScanResult result) {
+            device = result.getDevice();
+        }
+
+        @Override
+        public void run() {
+            mDeviceAdapter.add(device);
+        }
+    }
 }
 

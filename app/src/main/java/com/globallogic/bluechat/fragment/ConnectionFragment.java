@@ -119,6 +119,7 @@ public class ConnectionFragment extends Fragment {
                     } catch (IOException closeException) {
                         Log.d("ConnectionFragment", "Input socket couldn't have been closed");
                     }
+                    break;
                 }
             }
         }

@@ -14,8 +14,7 @@ public class BluetoothMgr implements BTManager {
     private BluetoothAdapter mBluetoothAdapter;
 
     public BluetoothMgr(Context context) {
-        BluetoothManager mBluetoothManager;
-        mBluetoothManager = (android.bluetooth.BluetoothManager)
+        BluetoothManager mBluetoothManager = (android.bluetooth.BluetoothManager)
                 context.getSystemService(context.BLUETOOTH_SERVICE);
 
         mBluetoothAdapter = mBluetoothManager.getAdapter();
