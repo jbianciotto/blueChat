@@ -3,6 +3,7 @@ package com.globallogic.bluechat.fragment;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
@@ -26,6 +27,7 @@ import com.globallogic.bluechat.adapter.DeviceAdapter;
 import com.globallogic.bluechat.interfaces.BTManager;
 import com.globallogic.bluechat.manager.BLEMgr;
 import com.globallogic.bluechat.manager.BluetoothMgr;
+import com.globallogic.bluechat.manager.OLDBLEMgr;
 import com.globallogic.bluechat.task.listenConnectionsTask;
 
 import java.io.IOException;
@@ -39,13 +41,13 @@ import java.util.UUID;
  * A placeholder fragment containing a simple view.
  */
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCallback {
+    final int REQUEST_ENABLE_BT = 20;
 
-    // Stops scanning after 10 seconds.
-    private static final long SCAN_PERIOD = 10000;
-    BTManager mBluetoothMgr;
-    private BroadcastReceiver mReceiver;
     private View mView;
+    private BTManager mBluetoothMgr;
+    private BroadcastReceiver mReceiver;
+
     private ArrayList<BluetoothDevice> mDeviceList = new ArrayList<>();
     private DeviceAdapter mDeviceAdapter;
 
@@ -53,22 +55,39 @@ public class HomeFragment extends Fragment {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-
-        final int REQUEST_ENABLE_BT = 20;
-
-        // displays a dialog requesting user permission to enable Bluetooth.
-        if (mBluetoothMgr.isDisabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
+    public void onLeScan(final BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mDeviceAdapter.add(bluetoothDevice);
+            }
+        });
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        startBT();
+
+        BluetoothManager bluetoothManager = (android.bluetooth.BluetoothManager)
+                getActivity().getSystemService(getActivity().BLUETOOTH_SERVICE);
+
+        BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
+
+        // displays a dialog requesting user permission to enable Bluetooth.
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        } else {
+            startBT();
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == REQUEST_ENABLE_BT && resultCode == getActivity().RESULT_CANCELED ) {
+            getActivity().finish();
+        }
     }
 
     public void startBT() {
@@ -105,25 +124,29 @@ public class HomeFragment extends Fragment {
             mBluetoothMgr.stopDiscovery();
         }
 
-        ScanCallback callback = new ScanCallback() {
-            @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                super.onScanResult(callbackType, result);
-                getActivity().runOnUiThread(new deviceReceiver(result));
-            }
+        if(android.os.Build.VERSION.SDK_INT >= 21) {
+            ScanCallback callback = new ScanCallback() {
+                @Override
+                public void onScanResult(int callbackType, ScanResult result) {
+                    super.onScanResult(callbackType, result);
+                    getActivity().runOnUiThread(new deviceReceiver(result));
+                }
 
-            @Override
-            public void onBatchScanResults(List<ScanResult> results) {
-                super.onBatchScanResults(results);
-            }
+                @Override
+                public void onBatchScanResults(List<ScanResult> results) {
+                    super.onBatchScanResults(results);
+                }
 
-            @Override
-            public void onScanFailed(int errorCode) {
-                super.onScanFailed(errorCode);
-            }
-        };
+                @Override
+                public void onScanFailed(int errorCode) {
+                    super.onScanFailed(errorCode);
+                }
+            };
 
-        mBluetoothMgr = new BLEMgr(getActivity(), callback);
+            mBluetoothMgr = new BLEMgr(getActivity(), callback);
+        } else {
+            mBluetoothMgr = new OLDBLEMgr(getActivity(), this);
+        }
     }
 
     public void onBondedSearch() {
@@ -142,7 +165,9 @@ public class HomeFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        getActivity().unregisterReceiver(mReceiver);
+        if(mReceiver != null) {
+            getActivity().unregisterReceiver(mReceiver);
+        }
     }
 
     private void startDiscovery() {

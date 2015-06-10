@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.globallogic.bluechat.Constants;
 import com.globallogic.bluechat.R;
 
 import java.io.IOException;
@@ -30,6 +31,16 @@ public class ConnectionFragment extends Fragment {
 
     public ConnectionFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        try {
+            bSocket.close();
+        } catch (IOException e) {
+            Log.e(Constants.LOGTAG, "Could not close the socket on connectionFragment");
+        }
     }
 
     public void setbSocket(BluetoothSocket bSocket) {

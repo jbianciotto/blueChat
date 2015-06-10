@@ -10,6 +10,4 @@ public interface BTManager {
     public BluetoothAdapter getBTAdapter();
     public void startDiscovery();
     public void stopDiscovery();
-    public boolean isDisabled();
-
 }

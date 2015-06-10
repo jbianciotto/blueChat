@@ -21,10 +21,10 @@ public class BLEMgr implements BTManager {
     private BluetoothLeScanner mBlueToothScanner;
 
     public BLEMgr(Context context, ScanCallback listener) {
-        BluetoothManager mBluetoothManager =
+        BluetoothManager bluetoothManager =
                 (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
 
-        mBluetoothAdapter =  mBluetoothManager.getAdapter();
+        mBluetoothAdapter =  bluetoothManager.getAdapter();
         mBlueToothScanner = mBluetoothAdapter.getBluetoothLeScanner();
 
         mListener = listener;
@@ -33,10 +33,6 @@ public class BLEMgr implements BTManager {
     @Override
     public BluetoothAdapter getBTAdapter() {
         return mBluetoothAdapter;
-    }
-
-    public boolean isDisabled() {
-        return mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled();
     }
 
     @Override
