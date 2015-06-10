@@ -37,7 +37,9 @@ public class ConnectionFragment extends Fragment {
     public void onStop() {
         super.onStop();
         try {
-            bSocket.close();
+            if(bSocket != null) {
+                bSocket.close();
+            }
         } catch (IOException e) {
             Log.e(Constants.LOGTAG, "Could not close the socket on connectionFragment");
         }
