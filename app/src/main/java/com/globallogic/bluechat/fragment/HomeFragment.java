@@ -14,29 +14,23 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.globallogic.bluechat.R;
-import com.globallogic.bluechat.activity.HomeActivity;
 import com.globallogic.bluechat.adapter.DeviceAdapter;
 import com.globallogic.bluechat.interfaces.BTManager;
 import com.globallogic.bluechat.manager.BLEMgr;
 import com.globallogic.bluechat.manager.BluetoothMgr;
 import com.globallogic.bluechat.manager.OLDBLEMgr;
-import com.globallogic.bluechat.task.listenConnectionsTask;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 
 /**
@@ -77,27 +71,18 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == REQUEST_ENABLE_BT && resultCode == getActivity().RESULT_CANCELED ) {
+        if (requestCode == REQUEST_ENABLE_BT && resultCode == getActivity().RESULT_CANCELED) {
             getActivity().finish();
-        }
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        if(mBluetoothMgr != null) {
-            new listenConnectionsTask().execute((HomeActivity) getActivity());
         }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(mReceiver != null) {
+        if (mReceiver != null) {
             getActivity().unregisterReceiver(mReceiver);
         }
     }
-
 
 
     @Override
@@ -112,24 +97,9 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
         deviceListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                cancelDiscovery();
                 BluetoothDevice device = (BluetoothDevice) mDeviceAdapter.getItem(i);
-                BluetoothSocket socket = null;
-                try {
-                    socket = device.createRfcommSocketToServiceRecord(UUID.fromString("96d85412-43a3-422e-92cb-1346f76ee620"));
-                    socket.connect();
-                    Log.d("BLUECHAT", "connection established to" + socket.getRemoteDevice().getAddress());
-
-                } catch (IOException e) {
-                    Log.d("ConnectionFragment", "IO EXCEPTION: " + e.getMessage() + "!!!!!");
-                }
-
-                if(socket.isConnected()) {
-                    ((HomeActivity) getActivity()).onConnectionEstablished(socket);
-                } else {
-                    Toast error = Toast.makeText(getActivity(), "No listening socket", Toast.LENGTH_LONG);
-                    error.show();
-                }
+                cancelDiscovery();
+                mBluetoothMgr.connect(getActivity(), device);
             }
         });
 
@@ -194,18 +164,20 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
             }
         };
 
-        mBluetoothMgr = new BluetoothMgr(getActivity());
 
         // Register the BroadcastReceiver
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         getActivity().registerReceiver(mReceiver, filter); // Don't forget to unregister during onDestroy
+
+        mBluetoothMgr = new BluetoothMgr(getActivity());
+        mBluetoothMgr.startServer(getActivity());
     }
 
     @TargetApi(21)
     public void startBLE() {
         cancelDiscovery();
 
-        if(android.os.Build.VERSION.SDK_INT >= 21) {
+        if (android.os.Build.VERSION.SDK_INT >= 21) {
             ScanCallback callback = new ScanCallback() {
                 @Override
                 public void onScanResult(int callbackType, ScanResult result) {
@@ -228,10 +200,11 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
         } else {
             mBluetoothMgr = new OLDBLEMgr(getActivity(), this);
         }
+        mBluetoothMgr.startServer(getActivity());
     }
 
     public void onBondedSearch() {
-        if(mBluetoothMgr != null) {
+        if (mBluetoothMgr != null) {
             mBluetoothMgr.stopDiscovery();
             Set<BluetoothDevice> pairedDevices = mBluetoothMgr.getBTAdapter().getBondedDevices();
             // If there are paired devices
@@ -242,6 +215,48 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
                     addDevice(device);
                 }
             }
+        }
+    }
+
+    @Override
+    public void onLeScan(final BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                addDevice(bluetoothDevice);
+            }
+        });
+    }
+
+    private void addDevice(BluetoothDevice device) {
+        if (!mDeviceList.contains(device)) {
+            mDeviceAdapter.add(device);
+        }
+    }
+
+    private void startDiscovery() {
+        //Ten-second scan limit
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                cancelDiscovery();
+            }
+        }, 10000);
+
+        cancelDiscovery();
+
+        mDeviceAdapter.clear();
+        Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
+        cancelButton.setEnabled(true);
+        mBluetoothMgr.startDiscovery();
+    }
+
+    public void cancelDiscovery() {
+        if (mBluetoothMgr != null) {
+            Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
+            cancelButton.setEnabled(false);
+            mBluetoothMgr.stopDiscovery();
         }
     }
 
@@ -260,49 +275,6 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
         @Override
         public void run() {
             addDevice(device);
-        }
-    }
-
-    @Override
-    public void onLeScan(final BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                addDevice(bluetoothDevice);
-            }
-        });
-    }
-
-
-    private void addDevice(BluetoothDevice device) {
-        if(!mDeviceList.contains(device)){
-            mDeviceAdapter.add(device);
-        }
-    }
-
-    private void startDiscovery() {
-        //Ten-second scan limit
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                  cancelDiscovery();
-            }
-        }, 10000);
-
-        cancelDiscovery();
-
-        mDeviceAdapter.clear();
-        Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
-        cancelButton.setEnabled(true);
-        mBluetoothMgr.startDiscovery();
-    }
-
-    public void cancelDiscovery() {
-        if(mBluetoothMgr != null) {
-            Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
-            cancelButton.setEnabled(false);
-            mBluetoothMgr.stopDiscovery();
         }
     }
 }
