@@ -231,14 +231,16 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
     }
 
     public void onBondedSearch() {
-        mBluetoothMgr.stopDiscovery();
-        Set<BluetoothDevice> pairedDevices = mBluetoothMgr.getBTAdapter().getBondedDevices();
-        // If there are paired devices
-        if (pairedDevices.size() > 0) {
-            // Loop through paired devices
-            for (BluetoothDevice device : pairedDevices) {
-                // Add the name and address to an array adapter to show in a ListView
-                addDevice(device);
+        if(mBluetoothMgr != null) {
+            mBluetoothMgr.stopDiscovery();
+            Set<BluetoothDevice> pairedDevices = mBluetoothMgr.getBTAdapter().getBondedDevices();
+            // If there are paired devices
+            if (pairedDevices.size() > 0) {
+                // Loop through paired devices
+                for (BluetoothDevice device : pairedDevices) {
+                    // Add the name and address to an array adapter to show in a ListView
+                    addDevice(device);
+                }
             }
         }
     }
