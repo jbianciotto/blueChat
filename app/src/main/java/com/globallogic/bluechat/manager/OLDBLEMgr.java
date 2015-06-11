@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.globallogic.bluechat.Constants;
 import com.globallogic.bluechat.interfaces.BTManager;
@@ -38,7 +39,8 @@ public class OLDBLEMgr implements BTManager {
 
     @Override
     public void startServer(Context context) {
-        return;
+        Toast error = Toast.makeText(context, "Server mode not supported", Toast.LENGTH_LONG);
+        error.show();
     }
 
     @Override

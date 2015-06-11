@@ -26,6 +26,7 @@ import com.globallogic.bluechat.activity.HomeActivity;
 import com.globallogic.bluechat.interfaces.BTManager;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 /**
  * Created by ecamarotta on 04/06/15.
@@ -34,10 +35,12 @@ import java.util.ArrayList;
 @TargetApi(21)
 public class BLEMgr implements BTManager {
     private static final ParcelUuid URI_BEACON_UUID = ParcelUuid.fromString("0000FED8-0000-1000-8000-00805F9B34FB");
+    private final UUID OWN_SERVICE_UUID= UUID.fromString("6f37dc2a-fbfa-4964-89c7-ac6cc3deb808");
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothScanner;
     private BluetoothLeAdvertiser mBluetoothAdvertiser;
+    private BluetoothGattServer mGattServer;
     private ScanCallback mListener;
     private ArrayList<BluetoothGattService> services;
 
@@ -125,7 +128,18 @@ public class BLEMgr implements BTManager {
 
         };
 
-        BluetoothGattServer server = mBluetoothManager.openGattServer(context, serverCallback);
+        BluetoothGattService service = new BluetoothGattService(
+                OWN_SERVICE_UUID,
+                BluetoothGattService.SERVICE_TYPE_PRIMARY);
+
+        mGattServer = mBluetoothManager.openGattServer(context, serverCallback);
+
+        mGattServer.addService(service);
+
+        Log.d(Constants.LOGTAG, "Servicios en el mGattServer:\n");
+        for(BluetoothGattService srv : mGattServer.getServices()) {
+            Log.d(Constants.LOGTAG, srv.getUuid() + "\n");
+        }
 
         AdvertiseCallback callback = new AdvertiseCallback() {
             @SuppressLint("Override")
@@ -160,13 +174,11 @@ public class BLEMgr implements BTManager {
     @Override
     public void stopServer(final Context context) {
 
-
-
         AdvertiseCallback callback = new AdvertiseCallback() {
             @SuppressLint("Override")
             @Override
             public void onStartSuccess(AdvertiseSettings advertiseSettings) {
-                final String message = "server stopped!";
+                final String message = "mGattServer stopped!";
                 ((HomeActivity) context).runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -189,6 +201,7 @@ public class BLEMgr implements BTManager {
 
         };
 
+        mGattServer.close();
         mBluetoothAdvertiser.stopAdvertising(callback);
     }
 
