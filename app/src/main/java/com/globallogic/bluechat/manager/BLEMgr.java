@@ -102,7 +102,7 @@ public class BLEMgr implements BTManager {
 
             @Override
             public void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
-                // this will get called after the client initiates a            BluetoothGatt.discoverServices() call
+                // this will get called after the client initiates a BluetoothGatt.discoverServices() call
                 Log.i(Constants.LOGTAG, "onServicesDiscovered");
             }
         };
