@@ -1,21 +1,28 @@
 package com.globallogic.bluechat.manager;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.AdvertiseData;
+import android.bluetooth.le.AdvertiseSettings;
+import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.content.Context;
+import android.os.ParcelUuid;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.globallogic.bluechat.Constants;
+import com.globallogic.bluechat.activity.HomeActivity;
 import com.globallogic.bluechat.interfaces.BTManager;
 
 import java.util.ArrayList;
@@ -26,58 +33,163 @@ import java.util.ArrayList;
 
 @TargetApi(21)
 public class BLEMgr implements BTManager {
-    BluetoothManager mBluetoothManager;
+    private static final ParcelUuid URI_BEACON_UUID = ParcelUuid.fromString("0000FED8-0000-1000-8000-00805F9B34FB");
+    private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
-    private BluetoothLeScanner mBlueToothScanner;
-    private BluetoothGattServer mServer;
+    private BluetoothLeScanner mBluetoothScanner;
+    private BluetoothLeAdvertiser mBluetoothAdvertiser;
     private ScanCallback mListener;
     private ArrayList<BluetoothGattService> services;
+
 
     public BLEMgr(Context context, ScanCallback listener) {
         mBluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
-        mBlueToothScanner = mBluetoothAdapter.getBluetoothLeScanner();
+        mBluetoothScanner = mBluetoothAdapter.getBluetoothLeScanner();
+        mBluetoothAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
         services = new ArrayList<BluetoothGattService>();
         mListener = listener;
     }
 
+    private AdvertiseData getAdvertisementData() {
+        AdvertiseData.Builder builder = new AdvertiseData.Builder();
+        builder.setIncludeTxPowerLevel(false); // reserve advertising space for URI
 
+        byte[] beaconData = new byte[7];
+        beaconData[0] = 0x00; // flags
+        beaconData[1] = (byte) 0xBA; // transmit power
+        beaconData[2] = 0x00; // http://www.
+        beaconData[3] = 0x65; // e
+        beaconData[4] = 0x66; // f
+        beaconData[5] = 0x66; // f
+        beaconData[6] = 0x08; // .org
+
+        builder.addServiceData(URI_BEACON_UUID, beaconData);
+
+        // Adding 0xFED8 to the "Service Complete List UUID 16" (0x3) for iOS compatibility
+        builder.addServiceUuid(URI_BEACON_UUID);
+
+        return builder.build();
+    }
+
+    private AdvertiseSettings getAdvertiseSettings() {
+        AdvertiseSettings.Builder builder = new AdvertiseSettings.Builder();
+        builder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED);
+        builder.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH);
+        builder.setConnectable(false);
+
+        return builder.build();
+    }
 
     @Override
-    public void startServer(Context context) {
+    public void startServer(final Context context) {
+        AdvertiseData adData = getAdvertisementData();
+        AdvertiseSettings adSettings = getAdvertiseSettings();
 
-        BluetoothGattServerCallback callback = new BluetoothGattServerCallback() {
-
+        BluetoothGattServerCallback serverCallback = new BluetoothGattServerCallback() {
             @Override
-            public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-                super.onConnectionStateChange(device, status, newState);
-                Log.i(Constants.LOGTAG, "onConnectionStateChange" + status + " " + newState);
+            public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
+                super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
+                Log.d(Constants.LOGTAG,"Characteristic read attempt");
             }
 
             @Override
             public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
                 super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
+                Log.d(Constants.LOGTAG, "Characteristic write attempt");
             }
 
             @Override
-            public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
-                super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
+            public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattDescriptor descriptor) {
+                super.onDescriptorReadRequest(device, requestId, offset, descriptor);
+                Log.d(Constants.LOGTAG, "Descriptor read attempt");
             }
+
+            @Override
+            public void onDescriptorWriteRequest(BluetoothDevice device, int requestId, BluetoothGattDescriptor descriptor, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+                super.onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value);
+                Log.d(Constants.LOGTAG, "Descriptor write attempt");
+            }
+
+            @Override
+            public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute) {
+                super.onExecuteWrite(device, requestId, execute);
+                Log.d(Constants.LOGTAG, "Execute write attempt");
+            }
+
+            @Override
+            public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
+                super.onConnectionStateChange(device, status, newState);
+                Log.d(Constants.LOGTAG, "Gatt server connection state has changed");
+            }
+
         };
 
-        Log.i(Constants.LOGTAG, "Starting BLE Server");
-        mServer = mBluetoothManager.openGattServer(context, callback);
-        Log.i(Constants.LOGTAG, "BLE Server Started");
+        BluetoothGattServer server = mBluetoothManager.openGattServer(context, serverCallback);
 
+        AdvertiseCallback callback = new AdvertiseCallback() {
+            @SuppressLint("Override")
+            @Override
+            public void onStartSuccess(AdvertiseSettings advertiseSettings) {
+                final String message = "Advertisement successful";
+                ((HomeActivity) context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
 
-        for(int i = 0; i < services.size(); i++) {
-            mServer.addService(services.get(i));
-        }
+            @SuppressLint("Override")
+            @Override
+            public void onStartFailure(int i) {
+                final String message = "Advertisement failed error code: " + i;
+                ((HomeActivity) context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+        };
+
+        mBluetoothAdvertiser.startAdvertising(adSettings, adData, callback);
     }
 
     @Override
-    public void stopServer(Context context) {
-        mServer.close();
+    public void stopServer(final Context context) {
+
+
+
+        AdvertiseCallback callback = new AdvertiseCallback() {
+            @SuppressLint("Override")
+            @Override
+            public void onStartSuccess(AdvertiseSettings advertiseSettings) {
+                final String message = "server stopped!";
+                ((HomeActivity) context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+            @SuppressLint("Override")
+            @Override
+            public void onStartFailure(int i) {
+                final String message = "stop failure: " + i;
+                ((HomeActivity) context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+        };
+
+        mBluetoothAdvertiser.stopAdvertising(callback);
     }
 
     public void addService(BluetoothGattService service) {
@@ -86,28 +198,7 @@ public class BLEMgr implements BTManager {
 
     @Override
     public void connect(Context context, BluetoothDevice device) {
-        BluetoothGattCallback btleGattCallback = new BluetoothGattCallback() {
 
-            @Override
-            public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
-                // this will get called anytime you perform a read or write characteristic operation
-                Log.i(Constants.LOGTAG, "OnCharacteristicChanged");
-            }
-
-            @Override
-            public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
-                // this will get called when a device connects or disconnects
-                Log.i(Constants.LOGTAG, "OnConnectionStateChange");
-            }
-
-            @Override
-            public void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
-                // this will get called after the client initiates a BluetoothGatt.discoverServices() call
-                Log.i(Constants.LOGTAG, "onServicesDiscovered");
-            }
-        };
-
-        BluetoothGatt bluetoothGatt = device.connectGatt(context, true, btleGattCallback);
     }
 
     @Override
@@ -117,11 +208,11 @@ public class BLEMgr implements BTManager {
 
     @Override
     public void startDiscovery() {
-        mBlueToothScanner.startScan(mListener);
+        mBluetoothScanner.startScan(mListener);
     }
 
     @Override
     public void stopDiscovery() {
-        mBlueToothScanner.stopScan(mListener);
+        mBluetoothScanner.stopScan(mListener);
     }
 }

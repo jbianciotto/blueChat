@@ -43,7 +43,6 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
     private View mView;
     private BTManager mBluetoothMgr;
     private BroadcastReceiver mReceiver;
-
     private ArrayList<BluetoothDevice> mDeviceList = new ArrayList<>();
     private DeviceAdapter mDeviceAdapter;
 
@@ -107,6 +106,7 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                cancelDiscovery();
                 startDiscovery();
             }
         });
@@ -132,6 +132,10 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
         bleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(mBluetoothMgr != null) {
+                    mBluetoothMgr.stopServer(getActivity());
+                    cancelDiscovery();
+                }
                 startBLE();
             }
         });
@@ -140,6 +144,10 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
         btButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(mBluetoothMgr != null) {
+                    mBluetoothMgr.stopServer(getActivity());
+                    cancelDiscovery();
+                }
                 startBT();
             }
         });
