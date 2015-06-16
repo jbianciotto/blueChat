@@ -152,6 +152,28 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
             }
         });
 
+        final Button startServerButton = (Button) mView.findViewById(R.id.start_server);
+        final Button stopServerButton = (Button) mView.findViewById(R.id.stop_server);
+
+        startServerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mBluetoothMgr.startServer(getActivity());
+                view.setEnabled(false);
+                stopServerButton.setEnabled(true);
+            }
+        });
+
+
+        stopServerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mBluetoothMgr.stopServer(getActivity());
+                view.setEnabled(false);
+                startServerButton.setEnabled(true);
+            }
+        });
+
         return mView;
     }
 
@@ -178,7 +200,6 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
         getActivity().registerReceiver(mReceiver, filter); // Don't forget to unregister during onDestroy
 
         mBluetoothMgr = new BluetoothMgr(getActivity());
-        mBluetoothMgr.startServer(getActivity());
     }
 
     @TargetApi(21)
@@ -208,7 +229,6 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
         } else {
             mBluetoothMgr = new OLDBLEMgr(getActivity(), this);
         }
-        mBluetoothMgr.startServer(getActivity());
     }
 
     public void onBondedSearch() {

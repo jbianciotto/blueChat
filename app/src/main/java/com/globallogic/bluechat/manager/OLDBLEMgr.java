@@ -54,19 +54,26 @@ public class OLDBLEMgr implements BTManager {
             @Override
             public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
                 // this will get called anytime you perform a read or write characteristic operation
-                Log.i(Constants.LOGTAG, "OnCharacteristicChanged");
+                Log.d(Constants.LOGTAG, "OnCharacteristicChanged");
             }
 
             @Override
             public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
                 // this will get called when a device connects or disconnects
                 Log.d(Constants.LOGTAG, "Connection Changed");
+                if(newState == BluetoothGatt.GATT_SUCCESS) {
+                    Log.d(Constants.LOGTAG, "Me conecte bien!!!");
+                } else {
+                    Log.d(Constants.LOGTAG, "Me conecte mal!!!");
+                }
             }
 
             @Override
             public void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
-                // this will get called after the client initiates a            BluetoothGatt.discoverServices() call
+                // this will get called after the client initiates a BluetoothGatt.discoverServices() call
                 String services = "";
+
+                Log.d(Constants.LOGTAG, "onServicesDiscovered entré!");
 
                 for(BluetoothGattService service : gatt.getServices()) {
                     services = services + service.getUuid() + "\n";

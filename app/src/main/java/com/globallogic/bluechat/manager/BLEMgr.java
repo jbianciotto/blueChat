@@ -25,7 +25,6 @@ import com.globallogic.bluechat.Constants;
 import com.globallogic.bluechat.activity.HomeActivity;
 import com.globallogic.bluechat.interfaces.BTManager;
 
-import java.util.ArrayList;
 import java.util.UUID;
 
 /**
@@ -34,43 +33,27 @@ import java.util.UUID;
 
 @TargetApi(21)
 public class BLEMgr implements BTManager {
-    private static final ParcelUuid URI_BEACON_UUID = ParcelUuid.fromString("0000FED8-0000-1000-8000-00805F9B34FB");
-    private final UUID OWN_SERVICE_UUID= UUID.fromString("6f37dc2a-fbfa-4964-89c7-ac6cc3deb808");
+    private final UUID CHAT_SERVICE_UUID = UUID.fromString("6f37dc2a-fbfa-4964-89c7-ac6cc3deb808");
+    private final UUID CHAT_CHARACT_UUID = UUID.fromString("ebf76999-173c-41ae-949b-3e8ab3c09555");
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothScanner;
     private BluetoothLeAdvertiser mBluetoothAdvertiser;
     private BluetoothGattServer mGattServer;
     private ScanCallback mListener;
-    private ArrayList<BluetoothGattService> services;
-
 
     public BLEMgr(Context context, ScanCallback listener) {
         mBluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         mBluetoothScanner = mBluetoothAdapter.getBluetoothLeScanner();
         mBluetoothAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
-        services = new ArrayList<BluetoothGattService>();
         mListener = listener;
     }
 
     private AdvertiseData getAdvertisementData() {
         AdvertiseData.Builder builder = new AdvertiseData.Builder();
         builder.setIncludeTxPowerLevel(false); // reserve advertising space for URI
-
-        byte[] beaconData = new byte[7];
-        beaconData[0] = 0x00; // flags
-        beaconData[1] = (byte) 0xBA; // transmit power
-        beaconData[2] = 0x00; // http://www.
-        beaconData[3] = 0x65; // e
-        beaconData[4] = 0x66; // f
-        beaconData[5] = 0x66; // f
-        beaconData[6] = 0x08; // .org
-
-        builder.addServiceData(URI_BEACON_UUID, beaconData);
-
-        // Adding 0xFED8 to the "Service Complete List UUID 16" (0x3) for iOS compatibility
-        builder.addServiceUuid(URI_BEACON_UUID);
+        builder.addServiceUuid(ParcelUuid.fromString(CHAT_SERVICE_UUID.toString()));
 
         return builder.build();
     }
@@ -79,7 +62,7 @@ public class BLEMgr implements BTManager {
         AdvertiseSettings.Builder builder = new AdvertiseSettings.Builder();
         builder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED);
         builder.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH);
-        builder.setConnectable(false);
+        builder.setConnectable(true);
 
         return builder.build();
     }
@@ -129,8 +112,20 @@ public class BLEMgr implements BTManager {
         };
 
         BluetoothGattService service = new BluetoothGattService(
-                OWN_SERVICE_UUID,
+                CHAT_SERVICE_UUID,
                 BluetoothGattService.SERVICE_TYPE_PRIMARY);
+
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(
+                CHAT_CHARACT_UUID,
+                BluetoothGattCharacteristic.PROPERTY_READ,
+                BluetoothGattCharacteristic.PERMISSION_READ);
+
+       /* BluetoothGattDescriptor descriptor = new BluetoothGattDescriptor(
+                CHAT_DESCR_UUID,
+                BluetoothGattDescriptor.PERMISSION_READ);
+
+        characteristic.addDescriptor(descriptor);*/
+        service.addCharacteristic(characteristic);
 
         mGattServer = mBluetoothManager.openGattServer(context, serverCallback);
 
@@ -201,12 +196,8 @@ public class BLEMgr implements BTManager {
 
         };
 
-        mGattServer.close();
         mBluetoothAdvertiser.stopAdvertising(callback);
-    }
-
-    public void addService(BluetoothGattService service) {
-        services.add(service);
+        mGattServer.close();
     }
 
     @Override
