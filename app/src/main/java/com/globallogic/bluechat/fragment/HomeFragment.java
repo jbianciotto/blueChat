@@ -281,7 +281,7 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
     }
 
     public void cancelDiscovery() {
-        if (mBluetoothMgr != null) {
+        if (mBluetoothMgr != null && mBluetoothMgr.getBTAdapter().isDiscovering()) {
             Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
             cancelButton.setEnabled(false);
             mBluetoothMgr.stopDiscovery();
