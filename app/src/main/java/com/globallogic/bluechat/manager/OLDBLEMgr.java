@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
@@ -26,7 +25,7 @@ public class OLDBLEMgr implements BTManager {
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private ArrayList<BluetoothGattService> services;
-    private BluetoothGattServer mServer;
+    private BluetoothGatt mBluetoothGatt;
 
 
     public OLDBLEMgr(Context context, BluetoothAdapter.LeScanCallback listener) {
@@ -45,11 +44,17 @@ public class OLDBLEMgr implements BTManager {
 
     @Override
     public void stopServer(Context context) {
-        mServer.close();
+
     }
 
     @Override
     public void connect(Context context, BluetoothDevice device) {
+
+        if(mBluetoothGatt != null) {
+            mBluetoothGatt.disconnect();
+            mBluetoothGatt.close();
+        }
+
         BluetoothGattCallback btleGattCallback = new BluetoothGattCallback() {
             @Override
             public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
@@ -83,8 +88,8 @@ public class OLDBLEMgr implements BTManager {
             }
         };
 
-        BluetoothGatt bluetoothGatt = device.connectGatt(context, true, btleGattCallback);
-        if(bluetoothGatt.discoverServices()) {
+        mBluetoothGatt = device.connectGatt(context, true, btleGattCallback);
+        if(mBluetoothGatt.discoverServices()) {
             Log.d(Constants.LOGTAG, "Discover services devolvio true");
         } else {
             Log.d(Constants.LOGTAG, "Discover services devolvio false");
