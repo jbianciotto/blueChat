@@ -58,7 +58,7 @@ public class BluetoothMgr implements BTManager {
         if (socket.isConnected()) {
             ((HomeActivity) context).onConnectionEstablished(socket);
         } else {
-            Toast error = Toast.makeText(context, "No listening socket", Toast.LENGTH_LONG);
+            Toast error = Toast.makeText(context, "Socket is not connected", Toast.LENGTH_LONG);
             error.show();
         }
     }

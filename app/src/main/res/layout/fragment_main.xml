@@ -38,7 +38,7 @@
                 android:layout_gravity="bottom"
                 android:layout_weight="1"
                 android:enabled="false"
-                android:text="Detener" />
+                android:text="@string/stop_label" />
 
             <Button
                 android:id="@+id/bonded_button"

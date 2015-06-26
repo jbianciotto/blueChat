@@ -14,13 +14,16 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import com.globallogic.bluechat.Constants;
 import com.globallogic.bluechat.R;
 import com.globallogic.bluechat.adapter.DeviceAdapter;
 import com.globallogic.bluechat.interfaces.BTManager;
@@ -31,6 +34,7 @@ import com.globallogic.bluechat.manager.OLDBLEMgr;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.TooManyListenersException;
 
 
 /**
@@ -96,9 +100,14 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
         deviceListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                BluetoothDevice device = (BluetoothDevice) mDeviceAdapter.getItem(i);
-                cancelDiscovery();
-                mBluetoothMgr.connect(getActivity(), device);
+                if(!mBluetoothMgr.getBTAdapter().isDiscovering()) {
+                    BluetoothDevice device = (BluetoothDevice) mDeviceAdapter.getItem(i);
+                    cancelDiscovery();
+                    mBluetoothMgr.connect(getActivity(), device);
+                } else {
+                    Toast error = Toast.makeText(getActivity(),"Please stop the discovery first", Toast.LENGTH_LONG);
+                    error.show();
+                }
             }
         });
 
@@ -268,11 +277,14 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
+                Log.d(Constants.LOGTAG, "10 secs passed, stopping discovery");
                 cancelDiscovery();
             }
         }, 10000);
 
-        cancelDiscovery();
+        if (mBluetoothMgr.getBTAdapter().isDiscovering()) {
+                cancelDiscovery();
+        }
 
         mDeviceAdapter.clear();
         Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
@@ -281,10 +293,13 @@ public class HomeFragment extends Fragment implements BluetoothAdapter.LeScanCal
     }
 
     public void cancelDiscovery() {
-        if (mBluetoothMgr != null && mBluetoothMgr.getBTAdapter().isDiscovering()) {
+        if (mBluetoothMgr != null) {
             Button cancelButton = (Button) mView.findViewById(R.id.cancel_button);
             cancelButton.setEnabled(false);
             mBluetoothMgr.stopDiscovery();
+//            try {
+//                Thread.sleep(2000);
+//            } catch (Exception e) {}
         }
     }
 

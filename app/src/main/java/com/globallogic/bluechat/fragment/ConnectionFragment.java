@@ -67,7 +67,7 @@ public class ConnectionFragment extends Fragment {
                 chatAdapter.add("Me: " + new String(payload));
                 chatWindow.smoothScrollToPosition(chatAdapter.getCount() - 1);
             }else {
-                Log.d("ConnectionFragment", "Socket está cerrado!!!!");
+                Log.d("ConnectionFragment", "Socket is closed!!!!");
             }
         } catch (IOException e) {
             Log.d("ConnectionFragment", "Transfer EXCEPTION!!!");

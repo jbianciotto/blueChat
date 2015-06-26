@@ -2,7 +2,8 @@
     <string name="app_name">BlueChat</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-    <string name="search_label">Buscar</string>
-    <string name="bond_label">Listar bonded</string>
-    <string name="send_button_text">Enviar</string>
+    <string name="search_label">Search</string>
+    <string name="stop_label">Stop</string>
+    <string name="bond_label">List bonded</string>
+    <string name="send_button_text">Send</string>
 </resources>

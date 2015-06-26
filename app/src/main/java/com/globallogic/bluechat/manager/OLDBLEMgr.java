@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
@@ -15,6 +16,9 @@ import com.globallogic.bluechat.Constants;
 import com.globallogic.bluechat.interfaces.BTManager;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by ecamarotta on 04/06/15.
@@ -50,11 +54,6 @@ public class OLDBLEMgr implements BTManager {
     @Override
     public void connect(Context context, BluetoothDevice device) {
 
-        if(mBluetoothGatt != null) {
-            mBluetoothGatt.disconnect();
-            mBluetoothGatt.close();
-        }
-
         BluetoothGattCallback btleGattCallback = new BluetoothGattCallback() {
             @Override
             public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
@@ -65,12 +64,15 @@ public class OLDBLEMgr implements BTManager {
             @Override
             public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
                 // this will get called when a device connects or disconnects
-                Log.d(Constants.LOGTAG, "Connection Changed");
-                if(newState == BluetoothGatt.GATT_SUCCESS) {
-                    Log.d(Constants.LOGTAG, "Me conecte bien!!!");
-                } else {
-                    Log.d(Constants.LOGTAG, "Me conecte mal!!!");
-                }
+                if (newState == BluetoothProfile.STATE_CONNECTED) Log.d(Constants.LOGTAG, "Connection status Changed to connected");
+                if (newState == BluetoothProfile.STATE_DISCONNECTED) Log.d(Constants.LOGTAG, "Connection status Changed to disconnected");
+
+                Log.d(Constants.LOGTAG, "Status "+status);
+//                if(status == BluetoothGatt.GATT_SUCCESS) {
+//                    Log.d(Constants.LOGTAG, "Me conecte bien!!!");
+//                } else {
+//                    Log.d(Constants.LOGTAG, "Me conecte mal!!!");
+//                }
             }
 
             @Override
@@ -78,21 +80,37 @@ public class OLDBLEMgr implements BTManager {
                 // this will get called after the client initiates a BluetoothGatt.discoverServices() call
                 String services = "";
 
-                Log.d(Constants.LOGTAG, "onServicesDiscovered entré!");
+                Log.d(Constants.LOGTAG, "inside onServicesDiscovered!");
+
+//                List<BluetoothGattService> servs = gatt.getServices();
+//                Collections.reverse(servs);
 
                 for(BluetoothGattService service : gatt.getServices()) {
                     services = services + service.getUuid() + "\n";
+                    for (BluetoothGattCharacteristic charact : service.getCharacteristics()) {
+                        services = services + "-----" + charact.getUuid() + "\n";
+//                        if (charact.getUuid().compareTo(UUID.fromString("ebf76999-173c-41ae-949b-3e8ab3c09555")) == 0) {
+//                            Log.d(Constants.LOGTAG, "reading char");
+//                            gatt.readCharacteristic(charact);
+//                        }
+                    }
                 }
 
-                Log.d(Constants.LOGTAG, "Servicios:\n" + services);
+                Log.d(Constants.LOGTAG, "Services:\n" + services);
+            }
+
+            @Override
+            public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+                Log.d(Constants.LOGTAG, "Charcteristic read with status "+status);
+                //Log.d(Constants.LOGTAG, "Charcteristic read: "+ characteristic.getStringValue(0));
             }
         };
 
-        mBluetoothGatt = device.connectGatt(context, true, btleGattCallback);
+        mBluetoothGatt = device.connectGatt(context, false, btleGattCallback);
         if(mBluetoothGatt.discoverServices()) {
-            Log.d(Constants.LOGTAG, "Discover services devolvio true");
+            Log.d(Constants.LOGTAG, "Discover services returned true");
         } else {
-            Log.d(Constants.LOGTAG, "Discover services devolvio false");
+            Log.d(Constants.LOGTAG, "Discover services returned false");
         }
     }
 

@@ -75,7 +75,6 @@ public class BLEMgr implements BTManager {
         BluetoothGattServerCallback serverCallback = new BluetoothGattServerCallback() {
             @Override
             public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
-                super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
                 Log.d(Constants.LOGTAG,"Characteristic read attempt");
             }
 
@@ -120,6 +119,10 @@ public class BLEMgr implements BTManager {
                 BluetoothGattCharacteristic.PROPERTY_READ,
                 BluetoothGattCharacteristic.PERMISSION_READ);
 
+        //characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+        byte[] text = new String("test").getBytes();
+        characteristic.setValue("texttttt");
+
        /* BluetoothGattDescriptor descriptor = new BluetoothGattDescriptor(
                 CHAT_DESCR_UUID,
                 BluetoothGattDescriptor.PERMISSION_READ);
@@ -131,7 +134,7 @@ public class BLEMgr implements BTManager {
 
         mGattServer.addService(service);
 
-        Log.d(Constants.LOGTAG, "Servicios en el mGattServer:\n");
+        Log.d(Constants.LOGTAG, "Services in mGattServer:\n");
         for(BluetoothGattService srv : mGattServer.getServices()) {
             Log.d(Constants.LOGTAG, srv.getUuid() + "\n");
         }
